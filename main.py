@@ -24,7 +24,6 @@ def train(model, optimizer, scheduler, criterion, train_loader, epoch, writer, c
         out = model(image)
         loss = criterion(out, label)
         loss.backwarconfigd()
-        #             avg.append(loss.item())
         optimizer.step()
         writer.add_scalar('Train/Loss', loss.item(), epoch * len(train_loader) + i)
 
@@ -36,7 +35,7 @@ def train(model, optimizer, scheduler, criterion, train_loader, epoch, writer, c
 
 
 def main(config):
-    device = torch.device('cuda:0' if config['device'] == 'gpu' and torch.cuda.is_available() else 'cpu')
+    device = torch.device('cuda:0' if (config['device'] == 'gpu' and torch.cuda.is_available()) else 'cpu')
 
 
     if config['snapshot']['use']:
@@ -66,7 +65,7 @@ def main(config):
     test_loader = None
     val_loader = None
     for epoch in range(config['num_epochs']):
-        train(model, optimizer, scheduler, criterion, train_loader, epoch, writer, config['device'])
+        train(model, optimizer, scheduler, criterion, train_loader, epoch, writer)
         pass
 
 
