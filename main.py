@@ -104,7 +104,6 @@ def main(config):
     train_loader = get_deepfake_train(config)
     val_loader = get_deepfake_val(config)
 
-    best_epoch = 0
     best_loss = np.inf
     tresholds = np.linspace(config['tresholds']['start'], config['tresholds']['finish'], config['tresholds']['steps'])
     for epoch in range(start_epoch, config['num_epochs']):
@@ -114,13 +113,13 @@ def main(config):
         print(f'val_loss={loss}    val_accuracy={max(accuracy)}')
         if best_loss > loss:
             best_loss = loss
-            best_epoch = epoch + 1
-            save_weights(model, config['prefix'], config['model_name'], f'best{best_epoch}', config['parallel'])
+            save_weights(model, config['prefix'], config['model_name'], f'best{epoch}', config['parallel'])
         
         if epoch != 0:
             scheduler.step(loss)
-        
-        save_weights(model, config['prefix'], config['model_name'], epoch + 1, config['parallel'])
+            
+        if epoch % config['save_frequency'] == 0:
+            save_weights(model, config['prefix'], config['model_name'], epoch, config['parallel'])
 
 
 if __name__ == '__main__':
