@@ -7,6 +7,7 @@ import yaml
 from models import classificators
 from utils.storage import load_weights, save_weights
 import numpy as np
+from data.datasets.deep_fake import get_DeepFakeTrain, get_DeepFakeVal
 import torch.nn.functional as F
 
 from torch.utils.tensorboard import SummaryWriter
@@ -28,10 +29,9 @@ def train(model, optimizer, scheduler, criterion, train_loader, epoch, writer, c
         writer.add_scalar('Train/Loss', loss.item(), epoch * len(train_loader) + i)
 
     pass
-# def val():
-#     pass
-# def test():
-#     pass
+def val():
+    pass
+
 
 
 def main(config):
@@ -56,14 +56,12 @@ def main(config):
     writer.add_graph(model)
     criterion = getattr(nn, config['criterion'])()
     optimizer = getattr(optim, config['optimizer'])(model.parameters(), lr=config['learning_rate'])
-    # scheduler = getattr(optim.lr_scheduler, config['lr_scheduler'])(optimizer, config['step'])
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer,
                                                      factor=config['learning_rate']['decay'],
                                                      patience=config['learning_rate']['no_improve'],
                                                      min_lr=config['learning_rate']['min_val'])
-    train_loader = None
-    test_loader = None
-    val_loader = None
+    train_loader = get_DeepFakeTrain(config)
+    val_loader = get_DeepFakeVal(config)
     for epoch in range(config['num_epochs']):
         train(model, optimizer, scheduler, criterion, train_loader, epoch, writer)
         pass

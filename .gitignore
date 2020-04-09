@@ -2,3 +2,7 @@
 visualization/
 .idea/
 data/deepfake-detection-challenge
+data/test
+data/test_videos
+data/train_sample_videos
+exp.ipynb

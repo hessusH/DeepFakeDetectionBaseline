@@ -45,10 +45,10 @@ def main(input_dir, output_dir, dataset_type, annotation_file):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--input_dir', required=False, type=str,
-                        default='./deepfake-detection-challenge/test_videos/',
+                        default='./test_videos/',
                         help='Choose directory containing your dataset')
     parser.add_argument('--output_dir', required=False, type=str,
-                        default='./deepfake-detection-challenge/test/',
+                        default='./test/',
                         help='Choose output directory')
     parser.add_argument('--dataset_type', required=False, type=str, default='test',
                         help='Choose dataset type')
