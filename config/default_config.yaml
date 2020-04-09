@@ -16,12 +16,12 @@ learning_rate: 0.01
 num_epochs: 30
 
 train:
-    folder: 'data/train/'
+    folder: 'data/training_data/train/'
     batch_size: 8
     shuffle: yes
 
 validation:
-    folder: 'data/val/'
+    folder: 'data/training_data/validation/'
     batch_size: 8
     shuffle: yes
 

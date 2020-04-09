@@ -1,6 +1,7 @@
 import os
 import cv2
 import json
+import random
 import argparse
 
 
@@ -22,40 +23,51 @@ def cut_video(filepath, out_dir, label=None):
     return new_annotation
 
 
-def main(input_dir, output_dir, dataset_type, annotation_file):
+def main(input_dir, output_dir, annotation_file):
     if not os.path.exists(output_dir):
         os.mkdir(output_dir)
-    assert (annotation_file is not None and dataset_type == 'train') or \
-           (annotation_file is None and dataset_type == 'test'), 'Arguments mismatch'
-    full_annotation = dict()
-    if annotation_file is not None:
-        with open(os.path.join(input_dir, annotation_file), 'r') as f:
-            annotation = json.load(f)
-        for key in annotation.keys():
-            new_annotation = cut_video(os.path.join(input_dir, key), output_dir, annotation[key]['label'])
-            full_annotation.update(new_annotation)
-            print(full_annotation)
-    else:
-        files = os.listdir(input_dir)
-        for file in files:
-            new_annotation = cut_video(os.path.join(input_dir, file), output_dir)
-            full_annotation.update(new_annotation)
-           
-    with open(os.path.join(output_dir, 'annotation.json'), 'w') as f:
-        json.dump(full_annotation, f)
+    
+    assert os.path.exists(annotation_file), 'No annotation file found'
+    
+    train_annotation = dict()
+    if not os.path.exists(os.path.join(output_dir, 'train/')):
+        os.mkdir(os.path.join(output_dir, 'train/'))
+    
+    val_annotation = dict()
+    if not os.path.exists(os.path.join(output_dir, 'validation/')):
+        os.mkdir(os.path.join(output_dir, 'validation/'))
+    
+    with open(annotation_file, 'r') as f:
+        annotation = json.load(f)
+     
+    images_list = list(annotation.keys())
+    random.shuffle(images_list)
+    val_keys = images_list[:30]
+    train_keys = images_list[30:]
+    
+    for key in val_keys:
+        new_annotation = cut_video(os.path.join(input_dir, key), os.path.join(output_dir, 'validation/'), annotation[key]['label'])
+        val_annotation.update(new_annotation)
+        
+    with open(os.path.join(os.path.join(output_dir, 'validation/'), 'annotation.json'), 'w') as f:
+        json.dump(val_annotation, f)
+        
+    for key in train_keys:
+        new_annotation = cut_video(os.path.join(input_dir, key), os.path.join(output_dir, 'train/'), annotation[key]['label'])
+        train_annotation.update(new_annotation)           
+    
+    with open(os.path.join(os.path.join(output_dir, 'train/'), 'annotation.json'), 'w') as f:
+        json.dump(train_annotation, f)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--input_dir', required=False, type=str,
-                        default='./test_videos/',
+    parser.add_argument('--input_dir', required=True, type=str,
                         help='Choose directory containing your dataset')
     parser.add_argument('--output_dir', required=False, type=str,
-                        default='./test/',
+                        default='./training_data/',
                         help='Choose output directory')
-    parser.add_argument('--dataset_type', required=False, type=str, default='test',
-                        help='Choose dataset type')
-    parser.add_argument('--annotation_file', required=False, type=str, default=None,
+    parser.add_argument('--annotation_file', required=True, type=str, 
                         help='Choose dataset annotation file')
     args = parser.parse_args()
     main(**vars(args))

@@ -49,32 +49,29 @@ def train(model, optimizer, criterion, train_loader, epoch, writer, config, devi
         print(f'loss={loss_handler.avg} accuracy={accuracy_handler.avg}')
         # writer.add_scalar('Train/Loss', loss.item(), epoch * len(train_loader) + i)
 
-def validation(val_loader, model, criterion, thresholds):
+def validation(val_loader, model, criterion, thresholds, device):
     model.eval()
     
     loss_handler = AverageMeter()
     accuracy_handler = [AverageMeter() for _ in thresholds]
     
     with torch.no_grad():
-        for i, (image, target) in enumerate(data_loader):
-            image = image.to(device)
-            target = target.to(device)
+        for i, (images, labels) in enumerate(val_loader):
+            images = images.to(device)
+            labels = labels.to(device)
             
-            output = model(image).view(-1)
+            output = model(images).view(-1)
             
-            loss = criterion(output, target)
+            loss = criterion(output, labels)
             loss_handler.update(loss)
     
-            target = target.byte()
+            labels = labels.byte()
             for i, threshold in enumerate(thresholds):
+                
                 pred = torch.sigmoid(output) > threshold
-            
-                accuracy = metrics.accuracy(pred, target)
-
+                accuracy = metrics.accuracy(pred, labels)
                 accuracy_handler[i].update(accuracy)
                 
-                
- 
     return (loss_handler.avg, [i.avg for i in accuracy_handler])
 
 
@@ -113,17 +110,17 @@ def main(config):
     for epoch in range(start_epoch, config['num_epochs']):
         train(model, optimizer, criterion, train_loader, epoch, writer, config, device)
         
-#         loss, accuracy = validation(val_loader, model, criterion, tresholds)
-#         print(f'val_loss={loss}    val_accuracy={max(accuracy)}')
-#         if best_loss > loss:
-#             best_loss = loss
-#             best_epoch = epoch + 1
-#             save_weights(model, config['prefix'], config['model_name'], f'best{best_epoch}', config['parallel'])
+        loss, accuracy = validation(val_loader, model, criterion, tresholds, device)
+        print(f'val_loss={loss}    val_accuracy={max(accuracy)}')
+        if best_loss > loss:
+            best_loss = loss
+            best_epoch = epoch + 1
+            save_weights(model, config['prefix'], config['model_name'], f'best{best_epoch}', config['parallel'])
         
-#         if epoch != 0:
-#             scheduler.step(loss)
+        if epoch != 0:
+            scheduler.step(loss)
         
-#         save_weights(model, config['prefix'], config['model_name'], epoch + 1, config['parallel'])
+        save_weights(model, config['prefix'], config['model_name'], epoch + 1, config['parallel'])
 
 
 if __name__ == '__main__':

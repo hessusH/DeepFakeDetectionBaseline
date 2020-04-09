@@ -1,9 +1,5 @@
 .ipynb_checkpoints/
 visualization/
 .idea/
-data/deepfake-detection-challenge
-data/test
-data/test_videos
-data/train_sample_videos
+data/training_data
 exp.ipynb
-data/train
