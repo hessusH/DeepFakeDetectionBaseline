@@ -1,10 +1,11 @@
 import os
-import torch
+import cv2
+import json
 from glob import glob
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
 
-from data.transformations import Transforms
+from data import transform
 
 
 class DeepFakeDataset(Dataset):
@@ -27,25 +28,25 @@ class DeepFakeDataset(Dataset):
     def __getitem__(self, index):
         image_name = self.images_list[index]
         label = self.annotation[image_name]
-        img = load_image(self.images_list[index])
-        sample['images'] = img
-        sample['labels'] = [0, label] if label else [1, 0]
+        img = self.load_image(self.images_list[index])
+        sample = {'images' : img,
+                  'labels' : [0, label] if label else [1, 0]}
         if self.transform:
             sample = self.transform(sample)
         return sample
 
 
-def get_DeepFakeTrain(config):
-    test_loader = DataLoader(DeepFakeDataset(data_dir=config['Train']['folder'],
-                                             transform=Transforms(config['input_size'], train=True)),
+def get_deepfake_train(config):
+    test_loader = DataLoader(DeepFakeDataset(folder=config['train']['folder'],
+                                             transform=transform.Transforms(config['input_size'], train=True)),
                              batch_size=config['train']['batch_size'],
                              shuffle=False,
                              num_workers=config['num_workers'])
 
 
-def get_DeepFakeVal(config):
-    test_loader = DataLoader(DeepFakeDataset(data_dir=config['validation']['folder'],
-                                             transform=Transforms(config['input_size'], train=False)),
+def get_deepfake_val(config):
+    test_loader = DataLoader(DeepFakeDataset(folder=config['validation']['folder'],
+                                             transform=transform.Transforms(config['input_size'], train=False)),
                              batch_size=config['validation']['batch_size'],
                              shuffle=False,
                              num_workers=config['num_workers'])

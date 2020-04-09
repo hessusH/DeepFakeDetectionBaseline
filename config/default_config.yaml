@@ -1,6 +1,7 @@
 prefix: 'mobilenetv2'
 parallel: no
 save_freq: 5
+device: 'cpu'
 num_workers: 0
 
 model_name: 'MobileNetV2'
@@ -8,36 +9,34 @@ features: 256
 num_classes: 2
 input_size: 256
 
-criterion: 'FocalLoss'
+loss: 'FocalLoss'
 optimizer: 'SGD'
-lr_scheduler:
 
-learning_rate: 0.5
+learning_rate: 0.01
 weight_decay: 0.0001
 momentum: 0.9
 milestones: [6, 12, 18, 24]
-batch_size: 8
+
 num_epochs: 30
 num_cycles: 5
 
 train:
-    folder: '/home/mdurinov/data/casia-SURF'
-    dataset: 'casia-SURF'
+    folder: 'data/train/'
+    batch_size: 8
 
-validataion:
-    folder: '/home/mdurinov/data/casia-SURF'
-    dataset: 'casia-SURF'
+validation:
+    folder: 'data/test/'
     batch_size: 8
     epoch: 5
     flip: yes
     weights: 'weights/mobilenet_256d_30e.pth'
 
-test:
-    folder:
-    dataset:
-    batch_size:
-    
-
+#test:
+#    folder:
+#    dataset:
+#    batch_size:
+#
+#
 snapshot:
     use: no
     epoch: 25

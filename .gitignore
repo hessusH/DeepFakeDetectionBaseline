@@ -6,3 +6,4 @@ data/test
 data/test_videos
 data/train_sample_videos
 exp.ipynb
+data/train
