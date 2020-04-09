@@ -1,44 +1,35 @@
-prefix: 'mobilenetv2'
+prefix: 'baseline'
 parallel: no
 save_freq: 5
-device: 'cpu'
+device: 'gpu'
 num_workers: 0
 
-model_name: 'MobileNetV2'
-features: 256
-num_classes: 2
-input_size: 256
+model_name: 
+num_classes: 1
+input_size: 512
+step: 3
 
-loss: 'FocalLoss'
+loss: 'BCELoss'
 optimizer: 'SGD'
-
 learning_rate: 0.01
-weight_decay: 0.0001
-momentum: 0.9
-milestones: [6, 12, 18, 24]
 
 num_epochs: 30
-num_cycles: 5
 
 train:
     folder: 'data/train/'
     batch_size: 8
+    shuffle: yes
 
 validation:
-    folder: 'data/test/'
+    folder: 'data/val/'
     batch_size: 8
-    epoch: 5
-    flip: yes
-    weights: 'weights/mobilenet_256d_30e.pth'
+    shuffle: yes
 
-#test:
-#    folder:
-#    dataset:
-#    batch_size:
-#
-#
+tresholds:
+    start: 0.3
+    finish: 0.8
+    steps: 20
+
 snapshot:
     use: no
     epoch: 25
-    
-

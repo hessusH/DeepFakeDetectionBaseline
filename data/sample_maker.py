@@ -14,7 +14,7 @@ def cut_video(filepath, out_dir, label=None):
         if ret:
             if counter % 30 == 0:
                 filename = filepath.split('/')[-1][:-4] + str(counter) + '.jpg'
-                new_annotation[filename] = label
+                new_annotation[filename] = int(label == 'FAKE')
                 cv2.imwrite(os.path.join(out_dir, filename), frame)
         else:
             cap.release()
@@ -27,19 +27,22 @@ def main(input_dir, output_dir, dataset_type, annotation_file):
         os.mkdir(output_dir)
     assert (annotation_file is not None and dataset_type == 'train') or \
            (annotation_file is None and dataset_type == 'test'), 'Arguments mismatch'
+    full_annotation = dict()
     if annotation_file is not None:
         with open(os.path.join(input_dir, annotation_file), 'r') as f:
             annotation = json.load(f)
         for key in annotation.keys():
             new_annotation = cut_video(os.path.join(input_dir, key), output_dir, annotation[key]['label'])
-            with open(os.path.join(output_dir, 'annotation.json'), 'w') as f:
-                json.dump(new_annotation, f)
+            full_annotation.update(new_annotation)
+            print(full_annotation)
     else:
         files = os.listdir(input_dir)
         for file in files:
             new_annotation = cut_video(os.path.join(input_dir, file), output_dir)
-            with open(os.path.join(output_dir, 'annotation.json'), 'w') as f:
-                json.dump(new_annotation, f)
+            full_annotation.update(new_annotation)
+           
+    with open(os.path.join(output_dir, 'annotation.json'), 'w') as f:
+        json.dump(full_annotation, f)
 
 
 if __name__ == '__main__':

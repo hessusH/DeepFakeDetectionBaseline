@@ -26,11 +26,13 @@ def train(model, optimizer, criterion, train_loader, epoch, writer, config, devi
     loss_handler = AverageMeter()
     accuracy_handler = AverageMeter()
 
-    for i, (image, label) in enumerate(train_loader):
-        image = image.to(device)
-        label = label.to(device)
-        output = model(image)
-        loss = criterion(output, label)
+    for i, (images, labels) in enumerate(train_loader):
+
+
+        images = images.to(device)
+        labels = labels.to(device)
+        output = model(images).view(-1)
+        loss = criterion(output, labels)
         loss.backward()
 
         if (i + 1) % config['step'] == 0:
@@ -38,23 +40,49 @@ def train(model, optimizer, criterion, train_loader, epoch, writer, config, devi
             optimizer.zero_grad()
 
         pred = torch.sigmoid(output) > 0.5
-        target = target > 0.5
-
-        accuracy = metrics.accuracy(pred, target)
+        labels = labels > 0.5
+        
+        accuracy = metrics.accuracy(pred, labels)
         loss_handler.update(loss)
         accuracy_handler.update(accuracy)
-        print(loss, accuracy)
+        
+        print(f'loss={loss_handler.avg} accuracy={accuracy_handler.avg}')
         # writer.add_scalar('Train/Loss', loss.item(), epoch * len(train_loader) + i)
 
-def val():
-    pass
+def validation(val_loader, model, criterion, thresholds):
+    model.eval()
+    
+    loss_handler = AverageMeter()
+    accuracy_handler = [AverageMeter() for _ in thresholds]
+    
+    with torch.no_grad():
+        for i, (image, target) in enumerate(data_loader):
+            image = image.to(device)
+            target = target.to(device)
+            
+            output = model(image).view(-1)
+            
+            loss = criterion(output, target)
+            loss_handler.update(loss)
+    
+            target = target.byte()
+            for i, threshold in enumerate(thresholds):
+                pred = torch.sigmoid(output) > threshold
+            
+                accuracy = metrics.accuracy(pred, target)
+
+                accuracy_handler[i].update(accuracy)
+                
+                
+ 
+    return (loss_handler.avg, [i.avg for i in accuracy_handler])
 
 
 
 def main(config):
     device = torch.device('cuda:0' if (config['device'] == 'gpu' and torch.cuda.is_available()) else 'cpu')
     # model = getattr(classificators, config['model_name'])(config['num_classes'])
-    model = torchvision.models.resnet18()
+    model = torchvision.models.resnet50(num_classes = config['num_classes'])
     model.to(device)
 
     if config['snapshot']['use']:
@@ -81,21 +109,21 @@ def main(config):
 
     best_epoch = 0
     best_loss = np.inf
-
+    tresholds = np.linspace(config['tresholds']['start'], config['tresholds']['finish'], config['tresholds']['steps'])
     for epoch in range(start_epoch, config['num_epochs']):
         train(model, optimizer, criterion, train_loader, epoch, writer, config, device)
-        #
-        # loss, accuracy = validation(val_loader, model, criterion)
-        #
-        # if best_loss > loss:
-        #     best_loss = loss
-        #     best_epoch = epoch + 1
-        #     save_weights(model, config['prefix'], config['model_name'], f'best{best_epoch}', config['parallel'])
-        #
-        # if epoch != 0:
-        #     scheduler.step(loss)
-        #
-        # save_weights(model, config['prefix'], config['model_name'], epoch + 1, config['parallel'])
+        
+#         loss, accuracy = validation(val_loader, model, criterion, tresholds)
+#         print(f'val_loss={loss}    val_accuracy={max(accuracy)}')
+#         if best_loss > loss:
+#             best_loss = loss
+#             best_epoch = epoch + 1
+#             save_weights(model, config['prefix'], config['model_name'], f'best{best_epoch}', config['parallel'])
+        
+#         if epoch != 0:
+#             scheduler.step(loss)
+        
+#         save_weights(model, config['prefix'], config['model_name'], epoch + 1, config['parallel'])
 
 
 if __name__ == '__main__':

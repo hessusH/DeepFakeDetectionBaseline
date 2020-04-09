@@ -13,16 +13,3 @@ class AverageMeter(object):
         self.sum += val * n
         self.count += n
         self.avg = self.sum / self.count
-
-
-class MetaData(object):
-    def __init__(self):
-        self.reset()
-
-    def reset(self):
-        self.loss = np.inf
-        self.score = 0        
-
-    def update(self, loss, score):
-        self.loss = loss
-        self.score = score
