@@ -3,3 +3,5 @@ visualization/
 .idea/
 data/training_data
 exp.ipynb
+runs/
+snapshots/

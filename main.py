@@ -7,7 +7,7 @@ import torch
 import torch.optim as optim
 import torchvision
 from torch.nn import DataParallel
-# from torch.utils.tensorboard import SummaryWriter
+from torch.utils.tensorboard import SummaryWriter
 
 import losses
 from utils.handlers import AverageMeter
@@ -15,9 +15,6 @@ import metrics.classification as metrics
 from models import classificators
 from utils.storage import load_weights, save_weights
 from data.datasets.deep_fake import get_deepfake_train, get_deepfake_val
-
-
-
 
 
 def train(model, optimizer, criterion, train_loader, epoch, writer, config, device):
@@ -45,9 +42,9 @@ def train(model, optimizer, criterion, train_loader, epoch, writer, config, devi
         accuracy = metrics.accuracy(pred, labels)
         loss_handler.update(loss)
         accuracy_handler.update(accuracy)
-        
-        print(f'loss={loss_handler.avg} accuracy={accuracy_handler.avg}')
-        # writer.add_scalar('Train/Loss', loss.item(), epoch * len(train_loader) + i)
+        writer.add_scalar('Train/Loss', loss_handler.avg, epoch * len(train_loader) + i)
+        writer.add_scalar('Train/Accuracy', accuracy_handler.avg, epoch * len(train_loader) + i)
+
 
 def validation(val_loader, model, criterion, thresholds, device):
     model.eval()
@@ -78,7 +75,7 @@ def validation(val_loader, model, criterion, thresholds, device):
 
 def main(config):
     device = torch.device('cuda:0' if (config['device'] == 'gpu' and torch.cuda.is_available()) else 'cpu')
-    # model = getattr(classificators, config['model_name'])(config['num_classes'])
+    model = getattr(classificators, config['model_name'])()
     model = torchvision.models.resnet50(num_classes = config['num_classes'])
     model.to(device)
 
@@ -92,9 +89,9 @@ def main(config):
         model = DataParallel(model)
 
     date = datetime.datetime.now()
-    writer = None #SummaryWriter(log_dir=str(date) + '_' + config['model_name'])
+    writer = SummaryWriter()
 
-    # writer.add_graph(model)
+    writer.add_graph(model, torch.rand([1, 3, 512, 512]).to(device))
     criterion = getattr(losses, config['loss'])()
     optimizer = getattr(optim, config['optimizer'])(model.parameters(), lr=config['learning_rate'])
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer,
@@ -110,7 +107,9 @@ def main(config):
         train(model, optimizer, criterion, train_loader, epoch, writer, config, device)
         
         loss, accuracy = validation(val_loader, model, criterion, tresholds, device)
-        print(f'val_loss={loss}    val_accuracy={max(accuracy)}')
+        writer.add_scalar('Val/Loss', loss, epoch)
+        writer.add_scalar('Val/Accuracy', max(accuracy), epoch)
+
         if best_loss > loss:
             best_loss = loss
             save_weights(model, config['prefix'], config['model_name'], f'best{epoch}', config['parallel'])
@@ -125,7 +124,7 @@ def main(config):
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--config', required=False, default='./config/default_config.yaml', help='Choose config file')
+    parser.add_argument('--config', required=False, default='config/default_config.yaml', help='Choose config file')
     args = parser.parse_args()
 
     with open(args.config, 'r') as file:
