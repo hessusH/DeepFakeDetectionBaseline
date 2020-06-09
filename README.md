@@ -9,6 +9,6 @@ Clone this repo, then run:
 ```pip install -r requirements.txt```
 # Training
 Create your own config file(or use default one), then run:
-```main.py --config <PATH_TO_YOUR_CONFIG>```
-Example:
-```main.py --config config/default_config.yaml```
+'\n'```main.py --config <PATH_TO_YOUR_CONFIG>```
+'\n'Example:
+'\n'```main.py --config config/default_config.yaml```
