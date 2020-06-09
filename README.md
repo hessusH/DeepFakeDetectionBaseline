@@ -10,3 +10,5 @@ Clone this repo, then run:
 # Training
 Create your own config file(or use default one), then run:
 ```main.py --config <PATH_TO_YOUR_CONFIG>```
+Example:
+```main.py --config config/default_config.yaml```
